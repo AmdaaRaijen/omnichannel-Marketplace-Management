@@ -1,6 +1,11 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Auth\LoginController;
+
+
+
 
 /*
 |--------------------------------------------------------------------------
@@ -13,6 +18,33 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
+
+
+
 Route::get('/', function () {
-    return view('welcome');
+  return redirect('/admin');
+});
+
+
+
+
+Route::prefix('admin')->group(function () {
+  Route::controller(LoginController::class)->group(function () {
+       Route::get('login', 'showLoginForm')->name('login');
+       Route::post('login', 'login');
+
+
+       Route::middleware(['auth'])->group(function () {
+         Route::post('logout', 'logout')->name('logout');
+       });
+  });
+
+
+
+
+  Route::middleware(['auth'])->group(function () {
+      Route::get('/', function () {
+          return 'Success';
+      });
+  });
 });
