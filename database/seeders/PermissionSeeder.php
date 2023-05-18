@@ -61,19 +61,19 @@ class PermissionSeeder extends Seeder
                 'group' => 'master_data',
                 'sub_group' => [
                     [
-                        'name' => 'category',
-                        'permission' => [
-                            [
-                                'name' => 'view_category',
-                                'label' => 'View Category',
-                            ]
-                        ]
-                    ],
-                    [
                         'name' => 'product',
                         'permission' => [
                             [
                                 'name' => 'view_product',
+                                'label' => 'View Product',
+                            ]
+                        ]
+                    ],
+                    [
+                        'name' => 'orders',
+                        'permission' => [
+                            [
+                                'name' => 'view_orders',
                                 'label' => 'View Product',
                             ]
                         ]

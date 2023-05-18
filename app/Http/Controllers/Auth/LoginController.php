@@ -58,14 +58,14 @@ class LoginController extends Controller
             $this->clearLoginAttempts($request);
 
             // Logout if user didnt have access to dashboard
-            if (!auth()->user()->can('view_general_dashboard')) {
-                $this->guard()->logout();
+            // if (!auth()->user()->can('view_general_dashboard')) {
+            //     $this->guard()->logout();
 
-                return response()->json([
-                    "status" => 403,
-                    "message" => "You didnt have access to dashboard, please contact your administrator",
-                ], 403);
-            }
+            //     return response()->json([
+            //         "status" => 403,
+            //         "message" => "You didnt have access to dashboard, please contact your administrator",
+            //     ], 403);
+            // }
 
             /*Initialization Access Module*/
             return response()->json([

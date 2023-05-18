@@ -18,11 +18,11 @@ class UserSeeder extends Seeder
     {
         $super_admin = User::updateOrCreate(
         [
-            'email' => 'superadmin@pos.com'
+            'email' => 'superadmin@ocm.com'
         ],
         [
             'name' => 'Super Admin',
-            'email' => 'superadmin@pos.com',
+            'email' => 'superadmin@ocm.com',
             'email_verified_at' => now(),
             'password' => Hash::make('rahasia123')
         ]);

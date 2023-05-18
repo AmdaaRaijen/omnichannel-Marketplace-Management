@@ -1,6 +1,6 @@
 <script setup>
 import axios from "axios";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { notify } from "notiwind";
 import { array } from "vue-types";
 import { usePage } from "@inertiajs/inertia-vue3";

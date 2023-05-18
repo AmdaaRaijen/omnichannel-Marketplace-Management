@@ -3,9 +3,8 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\LoginController;
-
-
-
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OrderController;
 
 /*
 |--------------------------------------------------------------------------
@@ -41,10 +40,16 @@ Route::prefix('admin')->group(function () {
 
 
 
-
   Route::middleware(['auth'])->group(function () {
       Route::get('/', function () {
-          return 'Success';
+          return redirect(route('dashboard.index'));
       });
+
+      Route::controller(DashboardController::class)->middleware('can:view_general_dashboard')->group(function() {
+          Route::get('dashboard', 'index')->name('dashboard.index');
+      });
+
+
+      require __DIR__.'/admin/master_data.php';
   });
 });

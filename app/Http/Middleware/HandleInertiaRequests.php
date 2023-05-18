@@ -2,8 +2,11 @@
 
 namespace App\Http\Middleware;
 
-use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Illuminate\Http\Request;
+use App\Helpers\Menu\Builder;
+use App\Helpers\Menu\ModuleAccess;
+use App\Actions\Utility\Dashboard\GetSidebarMenuAction;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -36,8 +39,19 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        // Get Modules
+        $sidebarMenu = new GetSidebarMenuAction();
+        $modules = $sidebarMenu->handle();
+
+        $builderSidebar = new Builder([
+            new ModuleAccess(),
+        ]);
+        $activeModules = array_values($builderSidebar->transformItems($modules));
+
         return array_merge(parent::share($request), [
-            //
+            'modules' =>  $activeModules,
+            'admin_data' =>  auth()->check() ? auth()->user() : 'null',
+            'admin_role' =>  auth()->check() ? auth()->user()->getRoleNames() : 'null',
         ]);
     }
 }
