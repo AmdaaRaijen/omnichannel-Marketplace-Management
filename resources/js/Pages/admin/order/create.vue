@@ -84,23 +84,26 @@ const handleCreate = () => {
     }
 
     let price = [];
+    let product_id = [];
     for (let i = 0; i < form.product.length; i++) {
         const test =
             props.products.find((product) => product.id == +form.product[i])
                 .price * form.order_quantity;
 
         price.push(test);
+        product_id.push(form.product[i]);
     }
 
     const data = {
         customer_id: +form.customer,
-        product_id: +form.product,
+        product_id: product_id,
         payment_status: form.payment_status,
         sales_channel_id: +form.marketplace,
         order_quantity: +form.order_quantity,
-        total_price: price,
+        total_price: totalPrice,
     };
-    // Inertia.post(route("order.store"), data);
+
+    console.log(data);
     axios
         .post(route("order.store"), data)
         .then((res) => {

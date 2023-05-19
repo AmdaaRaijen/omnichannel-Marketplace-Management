@@ -43,12 +43,16 @@ class OrderServices
    public function createData($request){
       $inputs =  $request->only(['customer_id','payment_status' ,'sales_channel_id', 'total_price']);
       if ($inputs['payment_status'] === 'paid') {
-          $inputs['paid_at'] = now()->format('Y-m-d H:i:s');; 
+          $inputs['paid_at'] = now()->format('Y-m-d H:i:s');; // Menggunakan waktu saat ini sebagai paid_date
       } else {
-          $inputs['paid_at'] = null; 
+          $inputs['paid_at'] = null; // Jika payment_status bukan "paid", set paid_date menjadi null
       }
 
-      Order::create($inputs);
+
+   
+      $order = new Order();
+      $order->fill($inputs);
+      $order->save();
       $orderID = $order->id;
       $selectedProducts = $request->input('product_id');
       $orderItemQuantity = $request->input('order_quantity');
@@ -60,16 +64,10 @@ class OrderServices
          $orderItem->order_id = $orderID;
          $orderItem->quantity = $orderItemQuantity;
          $orderItem->price = $productPrice[$i];
-         $orderItem->total_price = $orderItemQuantity[$i] * $productPrice[$i];
+         $orderItem->total_price = $orderItemQuantity * $productPrice[$i];
          $orderItem->save();
       }
-      // OrderItems::create([
-      //     'product_id' => $selectedProducts,
-      //     'order_id' => $orderID,
-      //     'quantity' => $orderItemQuantity,
-      //     'price' => $productPrice,
-      //     'total_price' => $orderItemQuantity * $productPrice,
-      // ]);
+
 
       return $order;
    }
