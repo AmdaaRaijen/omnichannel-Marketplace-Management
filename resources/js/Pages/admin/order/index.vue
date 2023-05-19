@@ -29,7 +29,22 @@ import { Inertia } from "@inertiajs/inertia";
 const query = ref({});
 const updateAction = ref(false);
 const itemSelected = ref({});
+const openAlert = ref(false);
 const openModalForm = ref(false);
+const alertData = reactive({
+    headerLabel: "",
+    contentLabel: "",
+    closeLabel: "",
+    submitLabel: "",
+});
+
+const pagination = ref({
+    count: "",
+    current_page: 1,
+    per_page: "",
+    total: 0,
+    total_pages: 1,
+});
 
 const breadcrumb = [
     {
@@ -61,10 +76,31 @@ const props = defineProps({
     orders: object(),
 });
 
-const handleAddModalForm = () => {
-    updateAction.value = false;
-    openModalForm.value = true;
+const nextPaginate = () => {
+    pagination.value.current_page += 1;
+    isLoading.value = true;
+    getData(pagination.value.current_page);
 };
+const previousPaginate = () => {
+    pagination.value.current_page -= 1;
+    isLoading.value = true;
+    getData(pagination.value.current_page);
+};
+
+const alertDelete = (data) => {
+    itemSelected.value = data;
+    openAlert.value = true;
+    alertData.headerLabel = "Are you sure to delete this?";
+    alertData.contentLabel = "You won't be able to revert this!";
+    alertData.closeLabel = "Cancel";
+    alertData.submitLabel = "Delete";
+};
+
+const closeAlert = () => {
+    itemSelected.value = ref({});
+    openAlert.value = false;
+};
+
 const handleEditModal = (data) => {
     updateAction.value = true;
     itemSelected.value = data;
@@ -76,21 +112,70 @@ const closeModalForm = () => {
     openModalForm.value = false;
 };
 
-const getData = debounce(async () => {
+const getData = debounce(async (page) => {
     axios
-        .get(route("order.getdata"))
+        .get(route("order.getdata"), {
+            params: {
+                page: page,
+            },
+        })
         .then((res) => {
-            query.value = res.data;
+            query.value = res.data.data;
+            pagination.value = res.data.meta.pagination;
+            console.log(res.data);
+        })
+        .catch((res) => {
+            notify(
+                {
+                    type: "error",
+                    group: "top",
+                    text: res.response.data.message,
+                },
+                2500
+            );
         })
         .finally(() => (isLoading.value = false));
 }, 500);
+
+const successSubmit = () => {
+    isLoading.value = true;
+    getData(1);
+};
+
+const handleDelete = async () => {
+    axios
+        .delete(route("order.delete", { id: itemSelected.value.id }))
+        .then((res) => {
+            notify(
+                {
+                    type: "success",
+                    group: "top",
+                    text: res.data.meta.message,
+                },
+                2500
+            );
+            openAlert.value = false;
+            isLoading.value = true;
+            getData(1);
+        })
+        .catch((res) => {
+            notify(
+                {
+                    type: "error",
+                    group: "top",
+                    text: res.response.data.message,
+                },
+                2500
+            );
+        });
+};
 
 const handleCreatePage = () => {
     Inertia.get(route("order.createPage"));
 };
 
 onMounted(() => {
-    getData();
+    getData(1);
 });
 </script>
 
@@ -106,7 +191,12 @@ onMounted(() => {
         :class="isLoading && 'min-h-[40vh] sm:min-h-[50vh]'"
     >
         <header class="block justify-between items-center sm:flex py-6 px-4">
-            <h2 class="font-semibold text-slate-800">All Products</h2>
+            <h2 class="font-semibold text-slate-800">
+                All Orders
+                <span class="text-slate-400 !font-medium ml">{{
+                    pagination.total
+                }}</span>
+            </h2>
             <div
                 class="mt-3 sm:mt-0 flex space-x-2 sm:justify-between justify-end"
             >
@@ -148,7 +238,9 @@ onMounted(() => {
                 <td class="px-4 whitespace-nowrap h-16">
                     {{ order.payment_status }}
                 </td>
-                <td class="px-4 whitespace-nowrap h-16">{{ order.paid_at }}</td>
+                <td class="px-4 whitespace-nowrap h-16">
+                    {{ order.paid_at ? order.paid_at : order.payment_status }}
+                </td>
                 <td class="px-4 whitespace-nowrap h-16">
                     Rp. {{ order.total_price }}
                 </td>
@@ -187,7 +279,25 @@ onMounted(() => {
                 </td>
             </tr>
         </VDataTable>
+        <div class="px-4 py-6">
+            <VPagination
+                :pagination="pagination"
+                @next="nextPaginate"
+                @previous="previousPaginate"
+            />
+        </div>
     </div>
+
+    <VAlert
+        :open-dialog="openAlert"
+        @closeAlert="closeAlert"
+        @submitAlert="handleDelete"
+        :headerLabel="alertData.headerLabel"
+        :content-label="alertData.contentLabel"
+        :close-label="alertData.closeLabel"
+        :submit-label="alertData.submitLabel"
+        type="danger"
+    />
     <VModalForm
         :data="itemSelected"
         :update-action="updateAction"

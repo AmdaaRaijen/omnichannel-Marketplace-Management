@@ -28,14 +28,14 @@ class OrderListResource extends ResourceCollection
     {
         return [
             'id' => $data->id,
-            'name' => $data->name,
-            'description' => $data->description,
-            'preview_image' => $data->image,
-            'price' => (int)$data->price,
-            'price_formatted' => number_format($data->price, 2, ',', '.'),
-            'stock' => $data->stock,
+            'customer_name' => $data->customer_name,
+            'payment_status' => $data->payment_status,
+            'platform_name' => $data->platform_name,
+            'product_name' => $data->product_name,
+            'paid_at' => $data->paid_at,
             'category_id' => $data->category_id,
-            'category_name' => $data->category->name
+            'sales_channel_id' => $data->sales_channel_id,
+            'total_price' => $data->total_price,
         ];
     }
 

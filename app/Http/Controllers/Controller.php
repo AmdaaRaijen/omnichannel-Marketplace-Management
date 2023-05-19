@@ -20,4 +20,19 @@ class Controller extends BaseController
             ]
         ], $status);
     }
+
+    public function messageSuccess($message = "Success", $status = 400)
+    {
+        return response()->json([
+            'meta' => [
+                "success" => true,
+                'message' => $message
+            ]
+        ], $status);
+    }
+    
+    public function respond($data)
+    {
+        return response()->json($data);
+    }
 }

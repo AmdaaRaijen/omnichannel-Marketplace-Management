@@ -16,7 +16,7 @@ Route::controller(OrderController::class)->middleware('can:view_orders')->prefix
     Route::get('/', 'index')->name('index');
     Route::get('get-data', 'getData')->name('getdata');
     Route::get('create', 'createPage')->name('createPage');
-    Route::post('create', 'createData')->name('create');
+    Route::post('store', 'createData')->name('store');
     Route::post('{id}/update', 'updateData')->name('update');
     Route::delete('{id}/delete', 'deleteData')->name('delete');
 });

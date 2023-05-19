@@ -7,6 +7,8 @@ import VDialog from "@/components/VDialog/index.vue";
 import VButton from "@/components/VButton/index.vue";
 import VInput from "@/components/VInput/index.vue";
 import VSelect from "@/components/VSelect/index.vue";
+import { Inertia } from "@inertiajs/inertia";
+import debounce from "@/composables/debounce";
 
 const props = defineProps({
     openDialog: bool(),
@@ -15,17 +17,18 @@ const props = defineProps({
     additional: object().def({}),
 });
 
+const paymentOption = ["paid", "pending", "failed"];
+
 const emit = defineEmits(["close", "successSubmit"]);
 
 const isLoading = ref(false);
 const formError = ref({});
 const form = ref({});
-const previewImage = ref("");
 
 const openForm = () => {
     if (props.updateAction) {
         form.value = Object.assign(form.value, props.data);
-        previewImage.value = props.data.preview_image;
+        console.log(form.value);
     } else {
         form.value = ref({});
     }
@@ -34,10 +37,49 @@ const openForm = () => {
 const closeForm = () => {
     form.value = ref({});
     formError.value = ref({});
-    if (document.getElementById("productImage")) {
-        document.getElementById("productImage").value = null;
-    }
-    previewImage.value = "";
+};
+
+const submit = async () => {
+    // Inertia.post(route("order.update", { id: props.data.id }), form.value, {
+    //     onSuccess: () => {
+    //         closeForm();
+    //         emit("close");
+    //         window.location.reload();
+    //         emit("successSubmit");
+    //     },
+    //     onError: (errors) => {
+    //         formError.value = errors.errors;
+    //     },
+    // });
+
+    axios
+        .post(route("order.update", { id: props.data.id }), form.value)
+
+        .then((res) => {
+            notify(
+                {
+                    type: "success",
+                    group: "top",
+                    text: res.data.message,
+                },
+                2500
+            );
+            closeForm();
+            emit("close");
+            emit("successSubmit");
+        })
+
+        .catch((res) => {
+            notify(
+                {
+                    type: "error",
+                    group: "top",
+                    text: res.response.data.message,
+                },
+                2500
+            );
+        })
+        .finally(() => (isLoading.value = false));
 };
 </script>
 
@@ -68,45 +110,12 @@ const closeForm = () => {
                     <VSelect
                         placeholder="Update Status"
                         :required="true"
-                        v-model="form.category_id"
-                        :options="additional.category_list"
-                        label="Category"
+                        v-model="form.payment_status"
+                        :options="paymentOption"
+                        label="Update Payment Status"
                         :errorMessage="formError.category_id"
                         @update:modelValue="formError.category_id = ''"
                     />
-                </div>
-                <div class="col-span-2">
-                    <label
-                        class="block text-sm font-medium text-slate-600 mb-1"
-                        for="productImage"
-                        >Product Image
-                        <span class="text-rose-500" v-if="!updateAction"
-                            >*</span
-                        ></label
-                    >
-                    <img
-                        class="w-32 h-32 mb-1"
-                        :src="previewImage"
-                        v-if="previewImage"
-                    />
-                    <input
-                        class="block w-full cursor-pointer bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-md"
-                        type="file"
-                        id="productImage"
-                        accept=".jpg, .jpeg, .png"
-                        @change="fileSelected"
-                    />
-                    <div
-                        class="text-xs mt-1"
-                        :class="[
-                            {
-                                'text-rose-500': formError.image,
-                            },
-                        ]"
-                        v-if="formError.image"
-                    >
-                        {{ formError.image }}
-                    </div>
                 </div>
             </div>
         </template>
