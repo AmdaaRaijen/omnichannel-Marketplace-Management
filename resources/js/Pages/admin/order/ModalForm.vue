@@ -28,7 +28,6 @@ const form = ref({});
 const openForm = () => {
     if (props.updateAction) {
         form.value = Object.assign(form.value, props.data);
-        console.log(form.value);
     } else {
         form.value = ref({});
     }
@@ -86,7 +85,7 @@ const submit = async () => {
 <template>
     <VDialog
         :showModal="openDialog"
-        :title="updateAction ? 'Update Product' : 'Create Product'"
+        :title="updateAction ? 'Update Status' : 'Create Status'"
         @opened="openForm"
         @closed="closeForm"
         size="xl"

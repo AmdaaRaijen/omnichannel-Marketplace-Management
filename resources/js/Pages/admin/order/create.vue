@@ -24,7 +24,7 @@ const paymentOption = ["paid", "pending", "failed"];
 
 const form = useForm({
     customer: "",
-    product: [""],
+    product: [],
     payment_status: "",
     marketplace: "",
     order_quantity: "",
@@ -48,6 +48,10 @@ const breadcrumb = [
     },
 ];
 
+const test = ref({
+    id: "",
+});
+
 const props = defineProps({
     title: string(),
     customers: object(),
@@ -70,9 +74,23 @@ onMounted(() => {
 });
 
 const handleCreate = () => {
-    const totalPrice =
-        props.products.find((product) => product.id == +form.product).price *
-        form.order_quantity;
+    let totalPrice = 0;
+    for (let i = 0; i < form.product.length; i++) {
+        const test =
+            props.products.find((product) => product.id == +form.product[i])
+                .price * form.order_quantity;
+
+        totalPrice += test;
+    }
+
+    let price = [];
+    for (let i = 0; i < form.product.length; i++) {
+        const test =
+            props.products.find((product) => product.id == +form.product[i])
+                .price * form.order_quantity;
+
+        price.push(test);
+    }
 
     const data = {
         customer_id: +form.customer,
@@ -80,9 +98,7 @@ const handleCreate = () => {
         payment_status: form.payment_status,
         sales_channel_id: +form.marketplace,
         order_quantity: +form.order_quantity,
-        total_price: totalPrice,
-        price: props.products.find((product) => product.id == +form.product)
-            .price,
+        total_price: price,
     };
     // Inertia.post(route("order.store"), data);
     axios
@@ -99,15 +115,25 @@ const handleCreate = () => {
             );
         })
         .catch((res) => {
+            console.log(res.response.data);
             notify(
                 {
                     type: "error",
                     group: "top",
-                    text: res.response.data.message,
+                    text: res.response.data.meta,
                 },
                 2500
             );
         });
+};
+
+const handleAddAnotherProduct = () => {
+    for (let i = 0; i < form.product.length; i++) {
+        const test =
+            props.products.find((product) => product.id == +form.product[i])
+                .price * form.order_quantity;
+        console.log(test);
+    }
 };
 </script>
 
@@ -138,14 +164,32 @@ const handleCreate = () => {
             />
 
             <!-- PRODUCT NAME -->
-            <VSelect
-                placeholder="Product Name"
-                label="Select Product Name"
-                :required="true"
-                v-model="form.product"
-                :options="productData"
-            />
-
+            <div class="flex justify-between gap-4">
+                <VSelect
+                    placeholder="Product Name"
+                    label="Select Product Name"
+                    :required="true"
+                    v-model="form.product"
+                    type="multiple"
+                    :options="productData"
+                    class="w-1/2"
+                />
+                <!-- ORDER QUANTITY -->
+                <VInput
+                    placeholder="Order Quantity"
+                    :required="true"
+                    type="number"
+                    v-model="form.order_quantity"
+                    label="Order Quantity"
+                    class="w-1/2"
+                />
+                <VButton
+                    label="+"
+                    type="primary"
+                    @click="handleAddAnotherProduct"
+                    class="mt-auto"
+                />
+            </div>
             <!-- PAYMENT STATUS -->
             <VSelect
                 placeholder="Payment Status"
@@ -154,14 +198,7 @@ const handleCreate = () => {
                 v-model="form.payment_status"
                 :options="paymentOption"
             />
-            <!-- ORDER QUANTITY -->
-            <VInput
-                placeholder="Order Quantity"
-                :required="true"
-                type="number"
-                v-model="form.order_quantity"
-                label="Order Quantity"
-            />
+
             <!-- MARKETPLACE NAME -->
             <VSelect
                 placeholder="Marketplace Name"

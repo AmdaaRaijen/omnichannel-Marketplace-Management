@@ -33,9 +33,8 @@ class OrderController extends Controller
     }
     public function createPage()
     {
-
-        
-    return Inertia::render('admin/order/create', [
+      
+        return Inertia::render('admin/order/create', [
             "title" => 'POS | Create Order',
             "customers" => Customer::get(),
             "products" => Product::get(),
@@ -59,13 +58,10 @@ class OrderController extends Controller
 
     public function createData(Request $request) {
         try{
- 
-
             $data = $this->orderServices->createData($request);
             $result = new SubmitOrderListResource($data, "Success create order");
 
             return $this->respond($result);
-
         }catch(\Exception $e)
         {
             return $this->exceptionError($e->getMessage());

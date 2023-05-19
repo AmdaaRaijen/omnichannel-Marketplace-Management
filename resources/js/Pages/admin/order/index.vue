@@ -28,6 +28,7 @@ import { Inertia } from "@inertiajs/inertia";
 
 const query = ref({});
 const updateAction = ref(false);
+const searchFilter = ref("");
 const itemSelected = ref({});
 const openAlert = ref(false);
 const openModalForm = ref(false);
@@ -87,6 +88,12 @@ const previousPaginate = () => {
     getData(pagination.value.current_page);
 };
 
+const searchHandle = (search) => {
+    searchFilter.value = search;
+    isLoading.value = true;
+    getData(1);
+};
+
 const alertDelete = (data) => {
     itemSelected.value = data;
     openAlert.value = true;
@@ -117,12 +124,12 @@ const getData = debounce(async (page) => {
         .get(route("order.getdata"), {
             params: {
                 page: page,
+                search: searchFilter.value,
             },
         })
         .then((res) => {
             query.value = res.data.data;
             pagination.value = res.data.meta.pagination;
-            console.log(res.data);
         })
         .catch((res) => {
             notify(
@@ -222,6 +229,18 @@ onMounted(() => {
                     :colspan="heads.length"
                 >
                     <VLoading />
+                </td>
+            </tr>
+            <tr v-else-if="query.length === 0 && !isLoading">
+                <td class="overflow-hidden my-2" :colspan="heads.length">
+                    <div class="flex items-center flex-col w-full my-32">
+                        <VEmpty />
+                        <div
+                            class="mt-9 text-slate-500 text-xl md:text-xl font-medium"
+                        >
+                            Result not found.
+                        </div>
+                    </div>
                 </td>
             </tr>
             <tr
