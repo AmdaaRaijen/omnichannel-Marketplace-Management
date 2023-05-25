@@ -12,16 +12,14 @@ class OrderServices
 
       $search = $request->search;
       
-
-
       $query = Order::query();
 
-      $query->join('order_items','order_items.order_id','=','orders.id');
-      $query->join('products','order_items.product_id','=','products.id');
-      $query->join('customers','orders.customer_id','=','customers.id');
-      $query->join('sales_channels','orders.sales_channel_id','=','sales_channels.id');
-      $query->selectRaw('orders.*, products.name AS product_name, customers.name AS customer_name, sales_channels.platform_name');
-
+      $query->join('order_items', 'order_items.order_id', '=', 'orders.id')
+      ->join('products', 'order_items.product_id', '=', 'products.id')
+      ->join('customers', 'orders.customer_id', '=', 'customers.id')
+      ->join('sales_channels', 'orders.sales_channel_id', '=', 'sales_channels.id')
+      ->selectRaw('orders.id AS order_id, orders.paid_at AS paid_at,orders.total_price, orders.payment_status , customers.name AS customer_name, sales_channels.platform_name, GROUP_CONCAT(products.name) AS product_names, GROUP_CONCAT(order_items.quantity) AS quantities')
+      ->groupBy('orders.id');
 
       $query->when($search, function ($query, $search) {
          return $query->where('orders.id', 'like', '%' . $search . '%')
@@ -48,26 +46,21 @@ class OrderServices
           $inputs['paid_at'] = null; // Jika payment_status bukan "paid", set paid_date menjadi null
       }
 
-
-   
       $order = new Order();
       $order->fill($inputs);
       $order->save();
       $orderID = $order->id;
-      $selectedProducts = $request->input('product_id');
-      $orderItemQuantity = $request->input('order_quantity');
-      $productPrice = $request->input('price');
-
-      for($i = 0; $i < count($selectedProducts); $i++){
-         $orderItem = new OrderItems();
-         $orderItem->product_id = $selectedProducts[$i];
-         $orderItem->order_id = $orderID;
-         $orderItem->quantity = $orderItemQuantity;
-         $orderItem->price = $productPrice[$i];
-         $orderItem->total_price = $orderItemQuantity * $productPrice[$i];
-         $orderItem->save();
+      $selectedProducts = $request->input('product_selected');
+      
+      foreach($selectedProducts as $product){
+            $orderItems = new OrderItems();
+            $orderItems->order_id = $orderID;
+            $orderItems->product_id = intval($product['product_id']);
+            $orderItems->quantity = intval($product['order_quantity']);
+            $orderItems->price = $product['price'];
+            $orderItems->total_price = $product['priceAmount'];
+            $orderItems->save();
       }
-
 
       return $order;
    }

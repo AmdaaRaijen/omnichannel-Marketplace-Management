@@ -26,15 +26,27 @@ class OrderListResource extends ResourceCollection
 
     private function transformData($data)
     {
+        // Mengubah string menjadi array dengan memisahkan berdasarkan koma
+        $productNames = explode(',', $data->product_names);
+        $quantities = explode(',', $data->quantities);
+
+        // Menggabungkan product_names dan quantities menjadi array of object
+        $products = [];
+        for ($i = 0; $i < count($productNames); $i++) {
+            $products[] = [
+                'name' => $productNames[$i],
+                'quantity' => $quantities[$i]
+            ];
+        }
+
         return [
-            'id' => $data->id,
+            'order_id' => $data->order_id,
             'customer_name' => $data->customer_name,
             'payment_status' => $data->payment_status,
             'platform_name' => $data->platform_name,
-            'product_name' => $data->product_name,
+            'products' => $products,
             'paid_at' => $data->paid_at,
             'category_id' => $data->category_id,
-            'sales_channel_id' => $data->sales_channel_id,
             'total_price' => $data->total_price,
         ];
     }

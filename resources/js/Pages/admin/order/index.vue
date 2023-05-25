@@ -130,6 +130,7 @@ const getData = debounce(async (page) => {
         .then((res) => {
             query.value = res.data.data;
             pagination.value = res.data.meta.pagination;
+            console.log(res.data.data);
         })
         .catch((res) => {
             notify(
@@ -183,6 +184,7 @@ const handleCreatePage = () => {
 
 onMounted(() => {
     getData(1);
+    console.log();
 });
 </script>
 
@@ -251,8 +253,29 @@ onMounted(() => {
                 <td class="px-4 whitespace-nowrap h-16">
                     {{ order.customer_name }}
                 </td>
-                <td class="px-4 whitespace-nowrap h-16">
-                    {{ order.product_name }}
+                <td class="flex gap-2 items-center px-4 whitespace-nowrap h-16">
+                    <template v-if="order.products.length === 1">
+                        <p>{{ order.products[0].name }}</p>
+                    </template>
+                    <template v-else-if="order.products.length === 2">
+                        <p>
+                            {{ order.products[0].name }} &
+                            {{ order.products[1].name }}
+                        </p>
+                    </template>
+                    <template v-else-if="order.products.length === 3">
+                        <p>
+                            {{ order.products[0].name }},
+                            {{ order.products[1].name }}, and
+                            {{ order.products[2].name }}
+                        </p>
+                    </template>
+                    <template v-else>
+                        <p>
+                            {{ order.products[0].name }},
+                            {{ order.products[1].name }}, ...
+                        </p>
+                    </template>
                 </td>
                 <td class="px-4 whitespace-nowrap h-16">
                     {{ order.payment_status }}

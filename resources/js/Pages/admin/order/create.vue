@@ -19,12 +19,12 @@ import VButton from "@/components/VButton/index.vue";
 const customerData = ref({ id: "" });
 const productData = ref({ id: "" });
 const marketplaceData = ref({ id: "" });
+const stopDelete = ref(true);
 
 const paymentOption = ["paid", "pending", "failed"];
 
 const form = useForm({
     customer: "",
-    product: [],
     payment_status: "",
     marketplace: "",
     order_quantity: "",
@@ -48,9 +48,14 @@ const breadcrumb = [
     },
 ];
 
-const test = ref({
-    id: "",
-});
+const productSelected = ref([
+    {
+        product_id: "",
+        order_quantity: "",
+        price: "0",
+        priceAmount: "0",
+    },
+]);
 
 const props = defineProps({
     title: string(),
@@ -74,33 +79,16 @@ onMounted(() => {
 });
 
 const handleCreate = () => {
-    let totalPrice = 0;
-    for (let i = 0; i < form.product.length; i++) {
-        const test =
-            props.products.find((product) => product.id == +form.product[i])
-                .price * form.order_quantity;
-
-        totalPrice += test;
-    }
-
-    let price = [];
-    let product_id = [];
-    for (let i = 0; i < form.product.length; i++) {
-        const test =
-            props.products.find((product) => product.id == +form.product[i])
-                .price * form.order_quantity;
-
-        price.push(test);
-        product_id.push(form.product[i]);
-    }
-
+    let total_price = 0;
+    productSelected.value.map((product) => {
+        total_price += product.priceAmount;
+    });
     const data = {
         customer_id: +form.customer,
-        product_id: product_id,
+        product_selected: productSelected.value,
         payment_status: form.payment_status,
         sales_channel_id: +form.marketplace,
-        order_quantity: +form.order_quantity,
-        total_price: totalPrice,
+        total_price: total_price,
     };
 
     console.log(data);
@@ -108,6 +96,14 @@ const handleCreate = () => {
         .post(route("order.store"), data)
         .then((res) => {
             form.reset();
+            productSelected.value = [
+                {
+                    product_id: "",
+                    order_quantity: "",
+                    price: "0",
+                    priceAmount: "0",
+                },
+            ];
             notify(
                 {
                     type: "success",
@@ -131,11 +127,33 @@ const handleCreate = () => {
 };
 
 const handleAddAnotherProduct = () => {
-    for (let i = 0; i < form.product.length; i++) {
-        const test =
-            props.products.find((product) => product.id == +form.product[i])
-                .price * form.order_quantity;
-        console.log(test);
+    stopDelete.value = false;
+    productSelected.value.push({
+        product_id: "",
+        order_quantity: "",
+        price: "0",
+        priceAmount: "0",
+    });
+};
+
+const handleDeleteProduct = (index) => {
+    productSelected.value.splice(index, 1);
+    productSelected.value.length <= 1
+        ? (stopDelete.value = true)
+        : (stopDelete.value = false);
+};
+
+const handleProductPriceEstimation = (index) => {
+    try {
+        const productPrice = props.products.find((data) => {
+            return data.id == +productSelected.value[index].product_id;
+        }).price;
+        const orderQuantity = productSelected.value[index].order_quantity;
+        productSelected.value[index].price = productPrice;
+        productSelected.value[index].priceAmount = productPrice * orderQuantity;
+    } catch (e) {
+        productSelected.value[index].price = 0;
+        productSelected.value[index].priceAmount = 0;
     }
 };
 </script>
@@ -165,33 +183,80 @@ const handleAddAnotherProduct = () => {
                 v-model="form.customer"
                 :options="customerData"
             />
-
-            <!-- PRODUCT NAME -->
-            <div class="flex justify-between gap-4">
-                <VSelect
-                    placeholder="Product Name"
-                    label="Select Product Name"
-                    :required="true"
-                    v-model="form.product"
-                    type="multiple"
-                    :options="productData"
-                    class="w-1/2"
-                />
-                <!-- ORDER QUANTITY -->
-                <VInput
-                    placeholder="Order Quantity"
-                    :required="true"
-                    type="number"
-                    v-model="form.order_quantity"
-                    label="Order Quantity"
-                    class="w-1/2"
-                />
-                <VButton
-                    label="+"
-                    type="primary"
-                    @click="handleAddAnotherProduct"
-                    class="mt-auto"
-                />
+            <!-- SELECTED PRODUCT -->
+            <div class="flex flex-col gap-4 justify-between">
+                <div
+                    v-for="(product, index) in productSelected"
+                    class="flex w-full gap-4"
+                >
+                    <!-- PRODUCT NAME-->
+                    <VSelect
+                        placeholder="Product Name"
+                        label="Select Product Name"
+                        :required="true"
+                        v-model="productSelected[index].product_id"
+                        @change="handleProductPriceEstimation(index)"
+                        :options="productData"
+                        class="w-1/2"
+                    />
+                    <div class="flex flex-col">
+                        <p
+                            class="mb-3 whitespace-nowrap block text-sm font-medium text-slate-600"
+                        >
+                            Price
+                        </p>
+                        <span
+                            class="block text-sm font-medium text-slate-600 mb-1 whitespace-nowrap"
+                            >Rp. {{ product.price }}</span
+                        >
+                    </div>
+                    <!-- ORDER QUANTITY -->
+                    <VInput
+                        placeholder="Order Quantity"
+                        :required="true"
+                        type="number"
+                        v-model="productSelected[index].order_quantity"
+                        @input="handleProductPriceEstimation(index)"
+                        label="Order Quantity"
+                        class="w-1/2"
+                    />
+                    <div class="flex flex-col">
+                        <p
+                            class="mb-3 whitespace-nowrap block text-sm font-medium text-slate-600"
+                        >
+                            Price Amount
+                        </p>
+                        <span
+                            class="block text-sm font-medium text-slate-600 mb-1 whitespace-nowrap"
+                            >Rp. {{ product.priceAmount }}</span
+                        >
+                    </div>
+                    <VButton
+                        label="delete"
+                        type="danger"
+                        v-if="stopDelete"
+                        disabled
+                        aria-disabled="stopDelete"
+                        @click="handleDeleteProduct(index)"
+                        class="mt-auto"
+                    />
+                    <VButton
+                        label="delete"
+                        type="danger"
+                        v-if="!stopDelete"
+                        aria-disabled="stopDelete"
+                        @click="handleDeleteProduct(index)"
+                        class="mt-auto"
+                    />
+                </div>
+                <div class="flex justify-end">
+                    <VButton
+                        label="Add Another Product"
+                        type="primary"
+                        @click="handleAddAnotherProduct"
+                        class="mt-auto"
+                    />
+                </div>
             </div>
             <!-- PAYMENT STATUS -->
             <VSelect
